@@ -13,7 +13,8 @@ class FavouritePage extends StatefulWidget {
 }
 
 class _FavouritePageState extends State<FavouritePage> {
-  FavouriteController _favouriteController = Get.put(FavouriteController());
+  final FavouriteController _favouriteController =
+      Get.put(FavouriteController());
 
   void delete(Quote quote) async {
     await _favouriteController.deleteFromFavourite(quote);
@@ -29,12 +30,8 @@ class _FavouritePageState extends State<FavouritePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: GestureDetector(
-            onTap: () {
-              print("heloooooooooooooooooooos");
-              Get.back();
-            },
-            child: Icon(Icons.arrow_back)),
+        leading:
+            GestureDetector(onTap: () {}, child: const Icon(Icons.arrow_back)),
         title: Text(
           "Favourites",
           style: GoogleFonts.lato(
@@ -58,6 +55,7 @@ class _FavouritePageState extends State<FavouritePage> {
                         margin: const EdgeInsets.only(bottom: 30),
                         child: QuoteLisItem(
                           quote: _favouriteController.favouriteQuotes[index],
+                          isFavourite: true,
                         ),
                       ),
                     ),

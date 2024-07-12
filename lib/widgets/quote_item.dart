@@ -1,12 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:quotes_app/controllers/favorite_controller.dart';
 import 'package:quotes_app/models/quote.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:quotes_app/utilities/add_to_favourite.dart';
+import 'package:quotes_app/utilities/share_text.dart';
 
 class QuoteLisItem extends StatelessWidget {
   final Quote quote;
@@ -17,35 +15,6 @@ class QuoteLisItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    void showSnackbar(String text) {
-      Get.snackbar(
-        "Snackbar Title", // title
-        text, // message
-        snackPosition: SnackPosition.BOTTOM, // position of the snackbar
-        backgroundColor: Colors.black45, // background color
-        colorText: Colors.white, // text color
-        borderRadius: 10, // border radius
-        margin: EdgeInsets.all(10), // margin
-        duration: Duration(seconds: 2), // duration
-      );
-    }
-
-    void addToFavourite(Quote quote) async {
-      print("Here The text Of The Quote");
-      print(quote.text);
-      FavouriteController controller = Get.put(FavouriteController());
-      bool success = await controller.addToFavourite(quote);
-      if (!success) {
-        showSnackbar("Quote Already Exists in Your Favourites List");
-      } else {
-        showSnackbar("Quote Added To Your Favourites Lsit");
-      }
-    }
-
-    void shareText(String text) async {
-      await Share.share(text);
-    }
-
     return Container(
       padding: const EdgeInsets.only(right: 15, left: 15, top: 20, bottom: 20),
       width: MediaQuery.of(context).size.width - 50,
@@ -64,7 +33,7 @@ class QuoteLisItem extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            quote.text!,
+            '"${quote.text}"',
             style: GoogleFonts.lato(
                 textStyle: TextStyle(
               color: Colors.black.withOpacity(0.9),
@@ -86,18 +55,18 @@ class QuoteLisItem extends StatelessWidget {
                       onTap: () {
                         shareText('"${quote.text}"');
                       },
-                      child: Icon(Icons.share),
+                      child: const Icon(Icons.share),
                     ),
-                    SizedBox(
+                    const SizedBox(
                       width: 10,
                     ),
                     isFavourite == true
                         ? GestureDetector(
                             onTap: () {
-                              FavouriteController _favouriteController =
+                              FavouriteController favouriteController =
                                   Get.put(FavouriteController());
 
-                              _favouriteController.deleteFromFavourite(quote);
+                              favouriteController.deleteFromFavourite(quote);
                             },
                             child: const Icon(
                               Icons.delete,
@@ -116,7 +85,7 @@ class QuoteLisItem extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  "- " + quote.author!,
+                  "- ${quote.author!}",
                   style: GoogleFonts.lato(
                       textStyle: const TextStyle(
                     fontWeight: FontWeight.bold,

@@ -1,12 +1,13 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:quotes_app/controllers/favorite_controller.dart';
-import 'package:quotes_app/models/quote.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:flutter/services.dart';
+import 'package:quotes_app/utilities/add_to_favourite.dart';
+import 'package:quotes_app/utilities/copy.dart';
+import 'package:quotes_app/utilities/exist.dart';
+import 'package:quotes_app/utilities/share_text.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,7 +18,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  FavouriteController _controller = Get.put(FavouriteController());
+  final FavouriteController _controller = Get.put(FavouriteController());
   int todayQuoteIndex = 0;
   static const String QUOTE_KEY = "quote_key";
   static const String TIMESTAMP_KEY = "timestamp_key";
@@ -63,40 +64,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    void shareText(String text) async {
-      await Share.share(text);
-    }
-
-    void showAutoDismissingMessage(BuildContext context, String message) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message), // Message content
-          duration: const Duration(seconds: 2), // Auto-dismiss after 3 seconds
-        ),
-      );
-    }
-
-    void addToFavourite(Quote quote, BuildContext context) async {
-      bool success = await _controller
-          .addToFavourite(Quote(text: quote.text, author: quote.author));
-      if (!success) {
-        showAutoDismissingMessage(
-            context, "Quote Alredy Exists in Your Favourites List");
-      } else {
-        showAutoDismissingMessage(
-            context, "Quote Added To Your Favourites Lsit");
-      }
-    }
-
-    void copyToClipboard(String text) async {
-      await Clipboard.setData(ClipboardData(text: text));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Copied "$text" to clipboard!'),
-        ),
-      );
-    }
-
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -115,134 +82,144 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.black,
                       fontWeight: FontWeight.bold),
                 ),
-                const Icon(
-                  Icons.exit_to_app,
-                  color: Colors.black,
-                  weight: 700,
-                  size: 30,
+                GestureDetector(
+                  onTap: () {
+                    exitApp();
+                  },
+                  child: const Icon(
+                    Icons.exit_to_app,
+                    color: Colors.black,
+                    weight: 700,
+                    size: 30,
+                  ),
                 )
               ],
             ),
             const SizedBox(
-              height: 50,
+              height: 100,
             ),
-            Text(
-              "Good Morning!",
-              style: GoogleFonts.lato(
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 30,
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Good Morning!",
+                  style: GoogleFonts.lato(
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            Container(
-              padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
-              height: 500,
-              width: 350,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                  colors: [
-                    Color.fromARGB(255, 120, 181, 232),
-                    Color.fromARGB(255, 217, 147, 229),
-                  ],
+                const SizedBox(
+                  height: 20,
                 ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  //Text Quote
-                  Row(
+                Container(
+                  padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
+                  height: 400,
+                  width: 350,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft,
+                      colors: [
+                        Color.fromARGB(255, 120, 181, 232),
+                        Color.fromARGB(255, 217, 147, 229),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      //Text Quote
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            alignment: Alignment.center,
+                            width: 300,
+                            child: Text(
+                              _controller.quotes[todayQuoteIndex].text!,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.lato(
+                                color: Colors.white,
+                                textStyle: const TextStyle(
+                                    fontSize: 25,
+                                    fontWeight: FontWeight.w500,
+                                    fontStyle: FontStyle.italic),
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      //Author
                       Container(
-                        alignment: Alignment.center,
-                        width: 300,
+                        margin: const EdgeInsets.only(right: 10),
+                        width: double.maxFinite,
                         child: Text(
-                          _controller.quotes[todayQuoteIndex].text!,
-                          textAlign: TextAlign.center,
+                          "- ${_controller.quotes[todayQuoteIndex].author!}",
+                          textAlign: TextAlign.right,
                           style: GoogleFonts.lato(
                             color: Colors.white,
                             textStyle: const TextStyle(
-                                fontSize: 25,
-                                fontWeight: FontWeight.w500,
-                                fontStyle: FontStyle.italic),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      )
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  //Author
-                  Container(
-                    margin: const EdgeInsets.only(right: 10),
-                    width: double.maxFinite,
-                    child: Text(
-                      "- " + _controller.quotes[todayQuoteIndex].author!,
-                      textAlign: TextAlign.right,
-                      style: GoogleFonts.lato(
-                        color: Colors.white,
-                        textStyle: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 50,
-                  ),
+                      const SizedBox(
+                        height: 50,
+                      ),
 
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            addToFavourite(
-                                _controller.quotes[todayQuoteIndex], context);
-                          },
-                          child: const Icon(
-                            Icons.favorite,
-                            color: Colors.red,
-                            size: 30,
-                          ),
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                addToFavourite(
+                                    _controller.quotes[todayQuoteIndex]);
+                              },
+                              child: const Icon(
+                                Icons.favorite,
+                                color: Colors.red,
+                                size: 30,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                copyToClipboard(
+                                    '"${_controller.quotes[todayQuoteIndex]}"');
+                              },
+                              child: const Icon(
+                                Icons.copy,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                shareText(
+                                    '"${_controller.quotes[todayQuoteIndex]}"');
+                              },
+                              child: const Icon(
+                                Icons.share,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            )
+                          ],
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            copyToClipboard(
-                                '"${_controller.quotes[todayQuoteIndex]}"');
-                          },
-                          child: const Icon(
-                            Icons.copy,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            shareText(
-                                '"${_controller.quotes[todayQuoteIndex]}"');
-                          },
-                          child: const Icon(
-                            Icons.share,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                        )
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
